@@ -13,3 +13,15 @@ response = client.models.generate_content(
 )
 
 print(response.text)
+
+def categorize_transaction(raw_text: str):
+    pass
+
+def build_prompt(raw_text: str):
+    pass
+
+def main():
+    pass
+
+if __name__ == "__main__":
+    main()
