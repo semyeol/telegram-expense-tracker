@@ -1,6 +1,10 @@
 from fastapi import FastAPI, Request
 import json
 from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -32,6 +36,11 @@ async def webhook(request: Request):
     text = message.get("text")
     user_id = message.get("from", {}).get("id")
     timestamp = message.get("date")
+
+    AUTHORIZED_USER = os.getenv('TELEGRAM_USER_ID')
+    if user_id != AUTHORIZED_USER:
+        print("User is unauthorized")
+        return {"ok": True}
 
     print(f"Received message from user {user_id}: {text} (timestamp: {timestamp})")
 
