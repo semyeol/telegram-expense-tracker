@@ -41,7 +41,13 @@ async def webhook(request: Request):
     if user_id != AUTHORIZED_USER:
         print("User is unauthorized")
         return {"ok": True}
+    
+    # if successful parsing and data added to google sheets:
+      # send good reply
+    # else, send an error message
 
     print(f"Received message from user {user_id}: {text} (timestamp: {timestamp})")
 
     return {"ok": True}
+
+
