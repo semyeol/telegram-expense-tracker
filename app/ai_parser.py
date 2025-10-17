@@ -81,20 +81,22 @@ def categorize_with_openai(raw_text: str):
     prompt = build_prompt(raw_text)
 
     response = client.chat.completions.create(
-        model="gpt-5-nano",
+        model="gpt-4.1",
         messages=[
-            {"role": "system", "content": "You are a financial transaction categorizer. Return only valid JSON."},
             {"role": "user", "content": prompt}
         ],
-        temperature=1,
+        temperature=0.1,
         max_completion_tokens=500
     )
 
-    print(response.choices[0].message.content)
-
-
     # parse response
     content = response.choices[0].message.content
+
+    if not content:
+        raise ValueError("OpenAI returned empty response")
+
+    print(f"OpenAI response: {content}")
+
     json_match = re.search(r'\{.*\}', content, re.DOTALL)
     if json_match:
         return json.loads(json_match.group())
@@ -117,7 +119,7 @@ def categorize_transaction(raw_text: str):
     print("Falling back to OpenAI...")
     try:
         result = categorize_with_openai(raw_text)
-        print("✓ Categorized with OpenAI")
+        print("Categorized with OpenAI")
         return result
     except Exception as e:
         print(f"OpenAI error: {e}")
@@ -125,6 +127,6 @@ def categorize_transaction(raw_text: str):
 
 
 if __name__ == "__main__":
-    test = "mcdonalds, 7"
+    test = "golf, 45"
     result = categorize_transaction(test)
     print(json.dumps(result, indent=2))
