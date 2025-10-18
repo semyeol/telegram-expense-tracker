@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
-from ai_parser import categorize_transaction
+from .ai_parser import categorize_transaction
 
 load_dotenv()
 
