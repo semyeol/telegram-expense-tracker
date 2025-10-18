@@ -85,6 +85,8 @@ def categorize_with_openai(raw_text: str):
         messages=[
             {"role": "user", "content": prompt}
         ],
+        # lower temp = more deterministic, follows directions
+        # higher temp = more creative
         temperature=0.1,
         max_completion_tokens=500
     )
@@ -108,7 +110,7 @@ def categorize_transaction(raw_text: str):
     for attempt in range(3):
         try:
             result = categorize_with_gemini(raw_text)
-            print(f"✓ Categorized with Gemini (attempt {attempt + 1})")
+            print(f"Categorized with Gemini (attempt {attempt + 1})")
             return result
         except Exception as e:
             print(f"Gemini error (attempt {attempt + 1}): {e}")
