@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request
-import json
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
@@ -37,7 +36,7 @@ async def webhook(request: Request):
     user_id = message.get("from", {}).get("id")
     timestamp = message.get("date")
 
-    AUTHORIZED_USER = os.getenv('TELEGRAM_USER_ID')
+    AUTHORIZED_USER = int(os.getenv('TELEGRAM_USER_ID', 0))
     if user_id != AUTHORIZED_USER:
         print("User is unauthorized")
         return {"ok": True}
@@ -46,7 +45,7 @@ async def webhook(request: Request):
       # send good reply
     # else, send an error message
 
-    print(f"Received message from user {user_id}: {text} (timestamp: {timestamp})")
+    print(f"Received message from user {user_id}: {text}, chat_id: {chat_id}, (timestamp: {timestamp})")
 
     return {"ok": True}
 
