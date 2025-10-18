@@ -50,7 +50,8 @@ async def webhook(request: Request):
 
     print(f"Received message from user {user_id}: {text}, chat_id: {chat_id}, (timestamp: {timestamp})")
 
-    # result = categorize_transaction(text)
+    result = categorize_transaction(text)
+    print(result)
 
     return {"ok": True}
 
