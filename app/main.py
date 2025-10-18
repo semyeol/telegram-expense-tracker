@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+from ai_parser import categorize_transaction
 
 load_dotenv()
 
@@ -37,6 +38,8 @@ async def webhook(request: Request):
     timestamp = message.get("date")
 
     AUTHORIZED_USER = int(os.getenv('TELEGRAM_USER_ID', 0))
+    print("DEBUG TELEGRAM_USER_ID =", os.getenv("TELEGRAM_USER_ID"))
+
     if user_id != AUTHORIZED_USER:
         print("User is unauthorized")
         return {"ok": True}
@@ -46,6 +49,8 @@ async def webhook(request: Request):
     # else, send an error message
 
     print(f"Received message from user {user_id}: {text}, chat_id: {chat_id}, (timestamp: {timestamp})")
+
+    # result = categorize_transaction(text)
 
     return {"ok": True}
 
