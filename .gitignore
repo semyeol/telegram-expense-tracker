@@ -2,3 +2,9 @@
 
 venv/
 __pycache__/
+
+# service acct creds
+Expense_Tracker_Bot.json
+
+
+

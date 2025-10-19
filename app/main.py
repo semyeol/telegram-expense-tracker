@@ -38,7 +38,6 @@ async def webhook(request: Request):
     timestamp = message.get("date")
 
     AUTHORIZED_USER = int(os.getenv('TELEGRAM_USER_ID', 0))
-    print("DEBUG TELEGRAM_USER_ID =", os.getenv("TELEGRAM_USER_ID"))
 
     if user_id != AUTHORIZED_USER:
         print("User is unauthorized")
