@@ -51,7 +51,7 @@ async def webhook(request: Request):
 
     result = categorize_transaction(text)
     print(result)
-    print(timestamp)
+    print(timestamp) # unix timestamp
 
     return {"ok": True}
 
