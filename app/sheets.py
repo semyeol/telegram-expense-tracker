@@ -26,12 +26,12 @@ def convert_timestamp(timestamp):
     local_time = dt.astimezone(
         ZoneInfo("America/Los_Angeles")
     )  # convert to PST, still a datetime object
-    # local_time = local_time.strftime("%Y-%m-%d %H:%M:%S") # string
     year = local_time.year
+    month = local_time.month
+    day = local_time.day
 
-    return local_time, year
+    return local_time, year, month, day
 
-# find spreadsheet in Drive, reuseable
 def find_file(name):
     response = (
           drive_service.files()
@@ -50,16 +50,16 @@ def find_file(name):
         return None
 
 def get_spreadsheet(timestamp):
-    _, year = convert_timestamp(timestamp)
-    spreadsheet_name = f"Expense Tracker {year}" # construct full file name
-    file_id = find_file(spreadsheet_name)
+    _, year, _, _ = convert_timestamp(timestamp)
+    spreadsheet_name = f"Expense Tracker {year}"
+    spreadsheet_id = find_file(spreadsheet_name)
 
-    if file_id:
-        return file_id
+    if spreadsheet_id:
+        return spreadsheet_id
     else:
-        return None
+        return create_spreadsheet(year)
 
-def create_speadsheet(year):
+def create_spreadsheet(year):
     # search for "Expense Tracker Template", get file id
     # duplicate the template, rename it, get the new file id
     template_id = find_file('Expense Tracker Template')
@@ -67,16 +67,47 @@ def create_speadsheet(year):
         raise FileNotFoundError("Template file was not found")
     
     try:
-        new_file_name = f"Expense Track {year}"
+        new_spreadsheet_name = f"Expense Track {year}"
         response = drive_service.files().copy(
             fileId=template_id,
-            body={"name": new_file_name}
+            body={"name": new_spreadsheet_name}
         ).execute()
 
         return response['id']
     except Exception as e: # any error
         raise Exception(f"Failed to create spreadsheet for {year}: {e}")
 
-def append_transaction():
-    pass
+def append_transaction(spreadsheet_id, timestamp, parsed_data):
+    # only append if confident in answer
+    confidence = parsed_data.get("confidence", 0)
+    if confidence <= 0.90:
+        return False  
+
+    local_time, year, month, day = convert_timestamp(timestamp)
+    date_str = local_time.strftime("%Y-%m-%d")
+    month_abbr = local_time.strftime("%b").upper()  # match sheet naming: "JAN" "FEB"
+
+    # table format is: [description, category, amount, date, from]
+    row = [
+        parsed_data["description"],
+        parsed_data["category"],
+        parsed_data["amount"],
+        date_str,
+        "work" 
+    ]
+
+    range_str = f"{month_abbr}!D:H"
+
+    try:
+        sheets_service.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range=range_str,
+            valueInputOption="USER_ENTERED",
+            body={"values": [row]}
+        ).execute()
+
+        return True  
+    except Exception as e:
+        print(f"Error appending transaction: {e}")
+        return False  
 

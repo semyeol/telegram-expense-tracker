@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 from .ai_parser import categorize_transaction
+from .sheets import get_spreadsheet, append_transaction
 
 load_dotenv()
 
@@ -42,16 +43,43 @@ async def webhook(request: Request):
     if user_id != AUTHORIZED_USER:
         print("User is unauthorized")
         return {"ok": True}
-    
-    # if successful parsing and data added to google sheets:
-      # send good reply
-    # else, send an error message
 
     print(f"Received message from user {user_id}: {text}, chat_id: {chat_id}, (timestamp: {timestamp})")
 
+    # 1. categorize
     result = categorize_transaction(text)
-    print(result)
-    print(timestamp) # unix timestamp
+
+    if not result:
+        print("AI parsing failed")
+        # TODO: Send Telegram message: "Could not parse transaction"
+        return {"ok": True}
+
+    print(f"AI parsed result: {result}")
+
+    # 2: get or create spreadsheet for the year
+    try:
+        spreadsheet_id = get_spreadsheet(timestamp)
+        print(f"Using spreadsheet: {spreadsheet_id}")
+    except Exception as e:
+        print(f"Error getting spreadsheet: {e}")
+        # TODO: Send Telegram message: "Error accessing spreadsheet"
+        return {"ok": True}
+
+    # 3: append transaction to sheet
+    success = append_transaction(spreadsheet_id, timestamp, result)
+
+    if success:
+        print(f"Successfully added: {result['description']} - ${result['amount']}")
+        # TODO: Send Telegram message: "✓ Added: {description} - ${amount}"
+    else:
+        # ow confidence or append failed
+        confidence = result.get("confidence", 0)
+        if confidence <= 0.90:
+            print(f"Low confidence ({confidence}), transaction not added")
+            # TODO: Send Telegram message: "AI was not confident in parsing. Please try again."
+        else:
+            print("Failed to append transaction to sheet")
+            # TODO: Send Telegram message: "Failed to save transaction"
 
     return {"ok": True}
 
