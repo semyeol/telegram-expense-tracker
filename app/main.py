@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from .ai_parser import categorize_transaction
 from .sheets import get_spreadsheet, append_transaction
+from .utils import send_reply
 
 load_dotenv()
 
@@ -41,7 +42,8 @@ async def webhook(request: Request):
     AUTHORIZED_USER = int(os.getenv('TELEGRAM_USER_ID', 0))
 
     if user_id != AUTHORIZED_USER:
-        print("User is unauthorized")
+        # print("User is unauthorized")
+        await send_reply(chat_id, "User is unauthorized!")
         return {"ok": True}
 
     print(f"Received message from user {user_id}: {text}, chat_id: {chat_id}, (timestamp: {timestamp})")
@@ -50,11 +52,9 @@ async def webhook(request: Request):
     result = categorize_transaction(text)
 
     if not result:
-        print("AI parsing failed")
-        # TODO: Send Telegram message: "Could not parse transaction"
+        # print("AI parsing failed")
+        await send_reply(chat_id, "AI failed to parse message xD")
         return {"ok": True}
-
-    print(f"AI parsed result: {result}")
 
     # 2: get or create spreadsheet for the year
     try:
@@ -62,24 +62,26 @@ async def webhook(request: Request):
         print(f"Using spreadsheet: {spreadsheet_id}")
     except Exception as e:
         print(f"Error getting spreadsheet: {e}")
-        # TODO: Send Telegram message: "Error accessing spreadsheet"
+        await send_reply(chat_id, "Error accessing spreadsheet...")
         return {"ok": True}
 
     # 3: append transaction to sheet
     success = append_transaction(spreadsheet_id, timestamp, result)
 
     if success:
+        description = result['description']
+        amount = result['amount']
         print(f"Successfully added: {result['description']} - ${result['amount']}")
-        # TODO: Send Telegram message: "Added: {description} - ${amount}"
+        await send_reply(chat_id, f"Added {description} : ${amount}!")
     else:
-        # ow confidence or append failed
+        # low confidence or append failed
         confidence = result.get("confidence", 0)
         if confidence <= 0.90:
             print(f"Low confidence ({confidence}), transaction not added")
-            # TODO: Send Telegram message: "AI was not confident in parsing. Please try again."
+            await send_reply(chat_id, f"The model was not confident in it's answer. \nConfidence: {confidence}")
         else:
             print("Failed to append transaction to sheet")
-            # TODO: Send Telegram message: "Failed to save transaction"
+            await send_reply(chat_id, "Failed to save transaction.")
 
     return {"ok": True}
 

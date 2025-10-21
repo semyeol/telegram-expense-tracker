@@ -111,3 +111,5 @@ def append_transaction(spreadsheet_id, timestamp, parsed_data):
         print(f"Error appending transaction: {e}")
         return False  
 
+def undo():
+    pass
