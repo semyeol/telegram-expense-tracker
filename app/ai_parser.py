@@ -57,7 +57,7 @@ Return only the JSON object, no additional text."""
 def categorize_with_gemini(raw_text: str):
     """Try to categorize using Gemini API"""
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"), http_options={'timeout': 100})
-    model_id = "gemini-2.0-flash-lite"
+    model_id = "gemini-2.0-flash"
 
     prompt = build_prompt(raw_text)
 

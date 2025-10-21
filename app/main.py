@@ -70,7 +70,7 @@ async def webhook(request: Request):
 
     if success:
         print(f"Successfully added: {result['description']} - ${result['amount']}")
-        # TODO: Send Telegram message: "✓ Added: {description} - ${amount}"
+        # TODO: Send Telegram message: "Added: {description} - ${amount}"
     else:
         # ow confidence or append failed
         confidence = result.get("confidence", 0)
