@@ -5,8 +5,10 @@ from openai import OpenAI
 import json
 import re
 import time
+import logging
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 INCOME_CATEGORIES = ["Work", "Other"]
 SAVINGS_CATEGORIES = ["Wealthfront"]
@@ -55,7 +57,6 @@ Return only the JSON object, no additional text."""
 
 
 def categorize_with_gemini(raw_text: str):
-    """Try to categorize using Gemini API"""
     client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"), http_options={'timeout': 100})
     model_id = "gemini-2.0-flash"
 
@@ -91,13 +92,14 @@ def categorize_with_openai(raw_text: str):
         max_completion_tokens=500
     )
 
-    # parse response
+    # different parsing than gemini
     content = response.choices[0].message.content
 
     if not content:
+        logger.error("OpenAI returned empty response.")
         raise ValueError("OpenAI returned empty response")
 
-    print(f"OpenAI response: {content}")
+    # print(f"OpenAI response: {content}")
 
     json_match = re.search(r'\{.*\}', content, re.DOTALL)
     if json_match:
@@ -110,21 +112,21 @@ def categorize_transaction(raw_text: str):
     for attempt in range(3):
         try:
             result = categorize_with_gemini(raw_text)
-            print(f"Categorized with Gemini (attempt {attempt + 1})")
+            logger.info(f"Categorized with Gemini (attempt {attempt + 1})")
             return result
         except Exception as e:
-            print(f"Gemini error (attempt {attempt + 1}): {e}")
+            logger.info(f"Gemini error (attempt {attempt + 1}): {e}")
             if attempt < 2:
                 time.sleep(2)
 
-    # openai fallback
-    print("Falling back to OpenAI...")
+    # Openai fallback
+    logger.info("Falling back to OpenAI...")
     try:
         result = categorize_with_openai(raw_text)
-        print("Categorized with OpenAI")
+        logger.info("Categorized with OpenAI")
         return result
     except Exception as e:
-        print(f"OpenAI error: {e}")
+        logger.error(f"OpenAI error: {e}")
         return None
 
 
