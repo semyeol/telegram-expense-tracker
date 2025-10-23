@@ -4,9 +4,6 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-import logging
-
-logger = logging.getLogger(__name__)
 
 creds_json = json.loads(os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON"))
 creds = service_account.Credentials.from_service_account_info(
@@ -67,7 +64,7 @@ def create_spreadsheet(year):
     # duplicate the template, rename it, get the new file id
     template_id = find_file('Expense Tracker Template')
     if not template_id:
-        logger.error("Template file was not found.")
+        print("Template file was not found.")
         raise FileNotFoundError("Template file was not found.") # raise for system issues
     
     try:
@@ -79,7 +76,7 @@ def create_spreadsheet(year):
 
         return response['id']
     except Exception as e: # any error
-        logger.error("Failed to create spreadsheet.")
+        print("Failed to create spreadsheet.")
         raise Exception(f"Failed to create spreadsheet for {year}: {e}")
 
 def append_transaction(spreadsheet_id, timestamp, parsed_data):
@@ -113,7 +110,7 @@ def append_transaction(spreadsheet_id, timestamp, parsed_data):
 
         return True  
     except Exception as e:
-        logger.error(f"Error appending transaction: {e}")
+        print(f"Error appending transaction: {e}")
         return False  
 
 def undo():

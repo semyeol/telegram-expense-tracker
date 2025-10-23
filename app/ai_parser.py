@@ -5,10 +5,8 @@ from openai import OpenAI
 import json
 import re
 import time
-import logging
 
 load_dotenv()
-logger = logging.getLogger(__name__)
 
 INCOME_CATEGORIES = ["Work", "Other"]
 SAVINGS_CATEGORIES = ["Wealthfront"]
@@ -96,7 +94,7 @@ def categorize_with_openai(raw_text: str):
     content = response.choices[0].message.content
 
     if not content:
-        logger.error("OpenAI returned empty response.")
+        print("OpenAI returned empty response.")
         raise ValueError("OpenAI returned empty response")
 
     # print(f"OpenAI response: {content}")
@@ -112,21 +110,21 @@ def categorize_transaction(raw_text: str):
     for attempt in range(3):
         try:
             result = categorize_with_gemini(raw_text)
-            logger.info(f"Categorized with Gemini (attempt {attempt + 1})")
+            print(f"Categorized with Gemini (attempt {attempt + 1})")
             return result
         except Exception as e:
-            logger.info(f"Gemini error (attempt {attempt + 1}): {e}")
+            print(f"Gemini error (attempt {attempt + 1}): {e}")
             if attempt < 2:
                 time.sleep(2)
 
     # Openai fallback
-    logger.info("Falling back to OpenAI...")
+    print("Falling back to OpenAI...")
     try:
         result = categorize_with_openai(raw_text)
-        logger.info("Categorized with OpenAI")
+        print("Categorized with OpenAI")
         return result
     except Exception as e:
-        logger.error(f"OpenAI error: {e}")
+        print(f"OpenAI error: {e}")
         return None
 
 

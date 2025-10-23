@@ -4,11 +4,9 @@ from dotenv import load_dotenv
 from .ai_parser import categorize_transaction
 from .sheets import get_spreadsheet, append_transaction
 from .utils import send_reply
-import logging
 
 load_dotenv()
 app = FastAPI()
-logger = logging.getLogger(__name__)
 
 """
 message format
@@ -35,7 +33,7 @@ async def webhook(request: Request):
     AUTHORIZED_USER = int(os.getenv('TELEGRAM_USER_ID', 0))
 
     if user_id != AUTHORIZED_USER:
-        logger.warning(f"Unauthorized user: {user_id} attempted to send message.")
+        print(f"Unauthorized user: {user_id} attempted to send message.")
         await send_reply(chat_id, "User is unauthorized!")
         return {"ok": True}
 
@@ -45,16 +43,16 @@ async def webhook(request: Request):
     result = categorize_transaction(text)
 
     if not result:
-        logger.error(f"AI parsing failed for message: {text}")
+        print(f"AI parsing failed for message: {text}")
         await send_reply(chat_id, "AI failed to parse message xD")
         return {"ok": True}
 
     # 2: get or create spreadsheet for the year
     try:
         spreadsheet_id = get_spreadsheet(timestamp)
-        logger.info(f"Spreadsheet retrieved: {spreadsheet_id}")
+        print(f"Spreadsheet retrieved: {spreadsheet_id}")
     except Exception as e:
-        logger.error("Error getting spreadsheet")
+        print("Error getting spreadsheet")
         await send_reply(chat_id, "Error getting spreadsheet...")
         return {"ok": True}
 
@@ -64,16 +62,16 @@ async def webhook(request: Request):
     if success:
         description = result['description']
         amount = result['amount']
-        logger.info(f"Successfully added: {result['description']} - ${result['amount']}")
+        print(f"Successfully added: {result['description']} - ${result['amount']}")
         await send_reply(chat_id, f"Added {description} : ${amount}!")
     else:
         # low confidence or append failed
         confidence = result.get("confidence", 0)
         if confidence <= 0.90:
-            logger.warning(f"Low confidence ({confidence}), transaction not added")
+            print(f"Low confidence ({confidence}), transaction not added")
             await send_reply(chat_id, f"The model was not confident in it's answer. \nConfidence: {confidence}")
         else:
-            logger.error("Failed to add transaction to sheet")
+            print("Failed to add transaction to sheet")
             await send_reply(chat_id, "Failed to add transaction.")
 
     return {"ok": True}
