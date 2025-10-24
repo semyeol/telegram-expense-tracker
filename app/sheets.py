@@ -95,7 +95,7 @@ def append_transaction(spreadsheet_id, timestamp, parsed_data):
         parsed_data["category"],
         parsed_data["amount"],
         date_str,
-        "work" 
+        "Work" 
     ]
 
     range_str = f"{month_abbr}!D:H"
